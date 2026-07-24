@@ -13,6 +13,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
 
+    // --- Dead Letter Queue --- //
+
     @Bean
     Queue dlQueue() {
         return QueueBuilder
@@ -35,31 +37,12 @@ public class RabbitConfig {
                 .with("dlx-routing-key");
     }
 
-    @Bean
-    Queue delay5sQueue() {
-        return QueueBuilder
-                .durable("5s-delay-queue")
-                .ttl(5000)
-                .deadLetterExchange("main-t8-exchange")
-                .deadLetterRoutingKey("main-routing-key")
-                .build();
-    }
+    // --- Delay Queue --- //
 
     @Bean
-    Queue delay10sQueue() {
+    Queue delayQueue() {
         return QueueBuilder
-                .durable("10s-delay-queue")
-                .ttl(10000)
-                .deadLetterExchange("main-t8-exchange")
-                .deadLetterRoutingKey("main-routing-key")
-                .build();
-    }
-
-    @Bean
-    Queue delay15sQueue() {
-        return QueueBuilder
-                .durable("15s-delay-queue")
-                .ttl(15000)
+                .durable("delay-queue")
                 .deadLetterExchange("main-t8-exchange")
                 .deadLetterRoutingKey("main-routing-key")
                 .build();
@@ -73,35 +56,19 @@ public class RabbitConfig {
     }
 
     @Bean
-    Binding delay5sBinding(Queue delay5sQueue, DirectExchange delayExchange) {
+    Binding delayBinding(Queue delayQueue, DirectExchange delayExchange) {
         return BindingBuilder
-                .bind(delay5sQueue)
+                .bind(delayQueue)
                 .to(delayExchange)
-                .with("5s-delay");
+                .with("delay-key");
     }
 
-    @Bean
-    Binding delay10sBinding(Queue delay10sQueue, DirectExchange delayExchange) {
-        return BindingBuilder
-                .bind(delay10sQueue)
-                .to(delayExchange)
-                .with("10s-delay");
-    }
-
-    @Bean
-    Binding delay15sBinding(Queue delay15sQueue, DirectExchange delayExchange) {
-        return BindingBuilder
-                .bind(delay15sQueue)
-                .to(delayExchange)
-                .with("15s-delay");
-    }
+    // --- Main Queue --- //
 
     @Bean
     Queue mainQueue() {
         return QueueBuilder
                 .durable("main-t8-queue")
-//                .deadLetterExchange("delay-exchange-1")
-//                .deadLetterRoutingKey("delay-1-routing-key")
                 .deadLetterExchange("dead-letter-exchange")
                 .deadLetterRoutingKey("dlx-routing-key")
                 .build();

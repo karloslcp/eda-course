@@ -30,19 +30,20 @@ public class ConsumerListener {
         System.out.println("Received message: \"" + messageBody + "\"");
         if ("fail".equals(messageBody)) {
             int attempts = getRetryAttempt(message);
-            String retryRoutingKey = switch (attempts) {
-                case 0 -> "5s-delay";
-                case 1 -> "10s-delay";
-                case 2 -> "15s-delay";
-                default -> null;
+            int delayMillis = switch (attempts) {
+                case 0 -> 5000;
+                case 1 -> 10000;
+                case 2 -> 15000;
+                default -> -1;
             };
 
-            if (retryRoutingKey == null) {
+            if (delayMillis < 0) {
                 channel.basicReject(deliveryTag, false);
                 return;
             }
             message.getMessageProperties().setHeader(RETRY_ATTEMPTS, attempts + 1);
-            rabbitTemplate.send("delay-exchange", retryRoutingKey, message);
+            message.getMessageProperties().setExpiration(String.valueOf(delayMillis));
+            rabbitTemplate.send("delay-exchange", "delay-key", message);
         }
         channel.basicAck(deliveryTag, false);
     }
