@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: 11-saga-choreography-billing-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/eda
+    username: eda
+    password: eda
+  sql:
+    init:
+      mode: always
+  rabbitmq:
+    listener:
+      simple:
+        acknowledge-mode: manual
+
+
+eda:
+  exchange: saga-exchange
+  tenants:
+    provisioned:
+      queue: tenant-provisioned-queue
+      routing-key: saga.tenant.provisioned
+  roles:
+    failed:
+      queue: role-failed-queue
+      routing-key: saga.roles.failed
+  billing:
+    created:
+      routing-key: saga.billing.created
+    failed:
+      routing-key: saga.billing.failed
+    compensated:
+      routing-key: saga.billing.compensated
